@@ -17,7 +17,7 @@ import ProductCard from "@/components/ProductCard";
 import { cn, formatCurrency } from "@/lib/utils";
 
 const API_PRODUCTOS =
-  "http://catalogoapiv-001-site1.qtempurl.com/api/productos";
+  "https://catalogoapiv-001-site1.qtempurl.com/api/productos";
 
 const PRODUCTS_PER_PAGE = 12;
 

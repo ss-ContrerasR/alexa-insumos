@@ -59,10 +59,10 @@ interface Producto {
 }
 
 const API_CATEGORIAS =
-  "http://catalogoapiv-001-site1.qtempurl.com/api/categorias";
+  "https://catalogoapiv-001-site1.qtempurl.com/api/categorias";
 
 const API_PRODUCTOS =
-  "http://catalogoapiv-001-site1.qtempurl.com/api/productos";
+  "https://catalogoapiv-001-site1.qtempurl.com/api/productos";
 
 export default function CatalogoDashboardPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
