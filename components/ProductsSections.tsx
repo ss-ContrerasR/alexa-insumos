@@ -535,7 +535,7 @@ Precio:
 ${formatCurrency(item.price)}
 
 Imagen:
-${item.image ? `${window.location.origin}${item.image}` : "Sin imagen"}
+${item.image || "Sin imagen"}
 `,
                       )
                       .join("\n");
