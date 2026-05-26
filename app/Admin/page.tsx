@@ -725,7 +725,7 @@ export default function CatalogoDashboardPage() {
                         </th>
 
                         <th className="px-6 py-5 text-left text-sm font-bold uppercase tracking-wider text-violet-700">
-                          Color
+                          Tamaño
                         </th>
 
                         <th className="px-6 py-5 text-left text-sm font-bold uppercase tracking-wider text-violet-700">
@@ -822,7 +822,7 @@ export default function CatalogoDashboardPage() {
 
                             <td className="px-6 py-5">
                               <Badge className="rounded-full bg-violet-100 px-4 py-2 text-violet-700">
-                                {producto.color || "Sin color"}
+                                {producto.color || "Sin tamaño"}
                               </Badge>
                             </td>
 
@@ -1077,7 +1077,7 @@ export default function CatalogoDashboardPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Color</Label>
+                <Label>Tamaño</Label>
 
                 <Input
                   value={productoForm.color}
