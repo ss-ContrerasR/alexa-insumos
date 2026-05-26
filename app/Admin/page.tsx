@@ -58,11 +58,14 @@ interface Producto {
   categorias?: Categoria[];
 }
 
+const API_BASE =
+  "https://catalogoapiv-001-site1.qtempurl.com/api";
+
 const API_CATEGORIAS =
-  "https://catalogoapiv-001-site1.qtempurl.com/api/categorias";
+  `${API_BASE}/categorias`;
 
 const API_PRODUCTOS =
-  "https://catalogoapiv-001-site1.qtempurl.com/api/productos";
+  `${API_BASE}/productos`;
 
 export default function CatalogoDashboardPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -122,34 +125,96 @@ export default function CatalogoDashboardPage() {
     }
   };
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
+const loadData = async () => {
+  try {
+    setLoading(true);
 
-      const [categoriasRes, productosRes] = await Promise.all([
-        fetch(API_CATEGORIAS),
-        fetch(API_PRODUCTOS),
-      ]);
+    const [categoriasRes, productosRes] = await Promise.all([
+      fetch(API_CATEGORIAS, {
+        method: "GET",
 
-      const categoriasData = await categoriasRes.json();
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      const productosData = await productosRes.json();
+        cache: "no-store",
+      }),
 
-      setCategorias(categoriasData);
+      fetch(API_PRODUCTOS, {
+        method: "GET",
 
-      setProductos(productosData);
-    } catch (error) {
-      console.error(error);
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      showToast("Error", "No fue posible cargar la información", "error");
-    } finally {
-      setLoading(false);
+        cache: "no-store",
+      }),
+    ]);
+
+    // VALIDATE HTTP
+
+    if (!categoriasRes.ok) {
+      throw new Error(
+        `Categorias HTTP Error: ${categoriasRes.status}`,
+      );
     }
-  };
 
-  useEffect(() => {
+    if (!productosRes.ok) {
+      throw new Error(
+        `Productos HTTP Error: ${productosRes.status}`,
+      );
+    }
+
+    // JSON
+
+    const categoriasData =
+      await categoriasRes.json();
+
+    const productosData =
+      await productosRes.json();
+
+    // VALIDATE ARRAY
+
+    setCategorias(
+      Array.isArray(categoriasData)
+        ? categoriasData
+        : [],
+    );
+
+    setProductos(
+      Array.isArray(productosData)
+        ? productosData
+        : [],
+    );
+  } catch (error) {
+    console.error(
+      "LOAD DATA ERROR:",
+      error,
+    );
+
+    setCategorias([]);
+
+    setProductos([]);
+
+    showToast(
+      "Error",
+      "No fue posible cargar la información",
+      "error",
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  loadData();
+
+  const interval = setInterval(() => {
     loadData();
-  }, []);
+  }, 30000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const filteredCategorias = useMemo(() => {
     return categorias.filter((categoria) =>
