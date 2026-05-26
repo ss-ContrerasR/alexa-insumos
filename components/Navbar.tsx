@@ -46,7 +46,7 @@ export default function Navbar() {
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <button
             className="relative p-2 rounded-full hover:bg-pink-50 transition-colors"
             aria-label="Carrito"
@@ -65,11 +65,11 @@ export default function Navbar() {
           >
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Mobile menu */}
-      {open && (
+      {/* {open && (
         <div className="md:hidden bg-white border-t border-pink-100 px-4 py-4 flex flex-col gap-3">
           {links.map((l) => (
             <a
@@ -82,10 +82,10 @@ export default function Navbar() {
             </a>
           ))}
           <Button size="sm" className="w-full mt-2">
-            Comprar Ahora
+            Comprar Ahoras
           </Button>
         </div>
-      )}
+      )} */}
     </nav>
   );
 }

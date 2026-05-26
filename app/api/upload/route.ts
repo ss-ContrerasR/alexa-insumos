@@ -1,61 +1,103 @@
-import { writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
 
-export async function POST(req: Request) {
-  try {
-    const data = await req.formData();
+// CLOUDINARY CONFIG
 
-    const file = data.get("file") as File;
+cloudinary.config({
+  cloud_name:
+    process.env
+      .NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+
+  api_key:
+    process.env.CLOUDINARY_API_KEY,
+
+  api_secret:
+    process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function POST(
+  req: Request
+) {
+  try {
+    const data =
+      await req.formData();
+
+    const file =
+      data.get(
+        "file"
+      ) as File;
 
     if (!file) {
       return NextResponse.json(
         {
           success: false,
-          message: "No file uploaded",
+          message:
+            "No file uploaded",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
-    // BUFFER
+    // FILE BUFFER
 
-    const bytes = await file.arrayBuffer();
+    const bytes =
+      await file.arrayBuffer();
 
-    const buffer = Buffer.from(bytes);
+    const buffer =
+      Buffer.from(bytes);
 
-    // UNIQUE NAME
+    // OPTIMIZE IMAGE WITH SHARP
 
-    const fileName = `${Date.now()}.webp`;
+    const optimizedBuffer =
+      await sharp(buffer)
 
-    // PATH
+        // RESIZE
+        .resize({
+          width: 1200,
 
-    const uploadPath = path.join(
-      process.cwd(),
-      "public/uploads/productos",
-      fileName
-    );
+          withoutEnlargement:
+            true,
+        })
 
-    // OPTIMIZE IMAGE
+        // WEBP
+        .webp({
+          quality: 75,
+        })
 
-    await sharp(buffer)
+        // TO BUFFER
+        .toBuffer();
 
-      // REDIMENSIONAR
-      .resize(1200)
+    // CONVERT TO BASE64
 
-      // WEBP
-      .webp({
-        quality: 75,
-      })
+    const base64 =
+      `data:image/webp;base64,${optimizedBuffer.toString(
+        "base64"
+      )}`;
 
-      // SAVE
-      .toFile(uploadPath);
+    // UPLOAD CLOUDINARY
+
+    const uploadResponse =
+      await cloudinary.uploader.upload(
+        base64,
+        {
+          folder:
+            "alexa-insumos/productos",
+
+          resource_type:
+            "image",
+
+          format: "webp",
+        }
+      );
 
     return NextResponse.json({
       success: true,
 
-      imageUrl: `/uploads/productos/${fileName}`,
+      imageUrl:
+        uploadResponse.secure_url,
     });
   } catch (error) {
     console.error(error);
@@ -63,9 +105,12 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Upload error",
+        message:
+          "Upload error",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
