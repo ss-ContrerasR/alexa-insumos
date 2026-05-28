@@ -10,10 +10,13 @@ import {
   SlidersHorizontal,
   Trash2,
   X,
+  Package,
+  Tag,
+  BadgeDollarSign,
+  Eye,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import ProductCard from "@/components/ProductCard";
 import { cn, formatCurrency } from "@/lib/utils";
 
 const API_PRODUCTOS =
@@ -32,12 +35,7 @@ interface Producto {
   precio: number;
   estado: boolean;
   color: string | null;
-
   imagenUrl?: string;
-
-  fechaCreacion?: string;
-  fechaActualizacion?: string;
-
   categorias?: Categoria[];
 }
 
@@ -49,19 +47,29 @@ interface CartProduct {
 }
 
 export default function ProductsSection() {
-  const [products, setProducts] = useState<Producto[]>([]);
+  const [products, setProducts] =
+    useState<Producto[]>([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] =
+    useState(1);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const [category, setCategory] = useState("Todos");
+  const [category, setCategory] =
+    useState("Todos");
 
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpen] =
+    useState(false);
 
-  const [cart, setCart] = useState<CartProduct[]>([]);
+  const [cart, setCart] =
+    useState<CartProduct[]>([]);
+
+  const [selectedProduct, setSelectedProduct] =
+    useState<Producto | null>(null);
 
   // LOAD PRODUCTS
 
@@ -70,9 +78,21 @@ export default function ProductsSection() {
       try {
         setLoading(true);
 
-        const response = await fetch(API_PRODUCTOS);
+        const response = await fetch(
+          API_PRODUCTOS,
+          {
+            cache: "no-store",
+          },
+        );
 
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            "Error cargando productos",
+          );
+        }
+
+        const data =
+          await response.json();
 
         setProducts(data);
       } catch (error) {
@@ -88,29 +108,93 @@ export default function ProductsSection() {
   // LOAD CART
 
   useEffect(() => {
-    const storedCart = localStorage.getItem("cart");
+    const storedCart =
+      localStorage.getItem("cart");
 
     if (storedCart) {
       setCart(JSON.parse(storedCart));
     }
   }, []);
 
-  // UPDATE CART
+  // REFRESH CART
 
   const refreshCart = () => {
-    const storedCart = localStorage.getItem("cart");
+    const storedCart =
+      localStorage.getItem("cart");
 
-    setCart(storedCart ? JSON.parse(storedCart) : []);
+    setCart(
+      storedCart
+        ? JSON.parse(storedCart)
+        : [],
+    );
   };
 
-  // REMOVE PRODUCT
+  // ADD TO CART
 
-  const removeFromCart = (id: number) => {
-    const updated = cart.filter((item) => item.id !== id);
+  const addToCart = (
+    product: Producto,
+  ) => {
+    const storedCart =
+      localStorage.getItem("cart");
+
+    const currentCart =
+      storedCart
+        ? JSON.parse(storedCart)
+        : [];
+
+    const exists =
+      currentCart.some(
+        (item: CartProduct) =>
+          item.id ===
+          Number(product.id),
+      );
+
+    if (exists) {
+      setCartOpen(true);
+      return;
+    }
+
+    const updated = [
+      ...currentCart,
+      {
+        id: Number(product.id),
+
+        name: product.nombre,
+
+        price: Number(
+          product.precio,
+        ),
+
+        image:
+          product.imagenUrl,
+      },
+    ];
+
+    localStorage.setItem(
+      "cart",
+      JSON.stringify(updated),
+    );
+
+    refreshCart();
+
+    setCartOpen(true);
+  };
+
+  // REMOVE
+
+  const removeFromCart = (
+    id: number,
+  ) => {
+    const updated = cart.filter(
+      (item) => item.id !== id,
+    );
 
     setCart(updated);
 
-    localStorage.setItem("cart", JSON.stringify(updated));
+    localStorage.setItem(
+      "cart",
+      JSON.stringify(updated),
+    );
   };
 
   // CLEAR CART
@@ -121,90 +205,429 @@ export default function ProductsSection() {
     localStorage.removeItem("cart");
   };
 
-  // WHATSAPP BUY
+  // WHATSAPP
 
   const handleBuyWhatsApp = () => {
     if (cart.length === 0) return;
 
-    let message = "¡Hola, me gustaría comprar estos productos!%0A%0A";
-
-    cart.forEach((item, index) => {
-      message += `🛍️ Producto ${index + 1}%0A`;
-
-      message += `📌 Nombre: ${item.name}%0A`;
-
-      message += `💰 Precio: ${formatCurrency(item.price)}%0A`;
-
-      if (item.image) {
-        message += `🖼️ Imagen: ${window.location.origin}${item.image}%0A`;
-      }
-
-      message += `%0A`;
-    });
-
-    const total = cart.reduce((acc, item) => acc + item.price, 0);
-
-    message += `%0A💵 Total: ${formatCurrency(total)}`;
-
-    const whatsappUrl = `https://wa.me/573203009633?text=${message}`;
-
-    window.open(whatsappUrl, "_blank");
-  };
-
-  // CATEGORIES FROM API
-
-  const categories = useMemo(() => {
-    const allCategories = products.flatMap(
-      (product) => product.categorias?.map((c) => c.nombre) || [],
+    const total = cart.reduce(
+      (acc, item) =>
+        acc + item.price,
+      0,
     );
 
-    return ["Todos", ...Array.from(new Set(allCategories))];
+    const productsText = cart
+      .map(
+        (item, index) => `
+━━━━━━━━━━━━━━━━━━
+
+PRODUCTO ${index + 1}
+
+🛍️ ${item.name}
+
+💰 ${formatCurrency(item.price)}
+
+🖼️ ${item.image || "Sin imagen"}
+`,
+      )
+      .join("\n");
+
+    const message =
+      encodeURIComponent(`
+Hola,
+
+Me gustaría comprar los siguientes productos:
+
+${productsText}
+
+━━━━━━━━━━━━━━━━━━
+
+TOTAL:
+${formatCurrency(total)}
+
+Muchas gracias.
+`);
+
+    window.open(
+      `https://wa.me/573142651558?text=${message}`,
+      "_blank",
+    );
+  };
+
+  // CATEGORIES
+
+  const categories = useMemo(() => {
+    const allCategories =
+      products.flatMap(
+        (product) =>
+          product.categorias?.map(
+            (c) => c.nombre,
+          ) || [],
+      );
+
+    return [
+      "Todos",
+      ...Array.from(
+        new Set(allCategories),
+      ),
+    ];
   }, [products]);
 
-  // FILTER PRODUCTS
+  // FILTER
 
-  const filtered = products.filter((p) => {
-    const matchSearch =
-      p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.color?.toLowerCase().includes(search.toLowerCase());
+  const filtered = products.filter(
+    (p) => {
+      const matchSearch =
+        p.nombre
+          .toLowerCase()
+          .includes(
+            search.toLowerCase(),
+          );
 
-    const matchCat =
-      category === "Todos" ||
-      p.categorias?.some((cat) => cat.nombre === category);
+      const matchCategory =
+        category === "Todos" ||
+        p.categorias?.some(
+          (cat) =>
+            cat.nombre ===
+            category,
+        );
 
-    return matchSearch && matchCat;
-  });
+      return (
+        matchSearch &&
+        matchCategory
+      );
+    },
+  );
 
   // PAGINATION
 
-  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+  const totalPages =
+    Math.ceil(
+      filtered.length /
+        PRODUCTS_PER_PAGE,
+    );
 
-  const paginated = filtered.slice(
-    (page - 1) * PRODUCTS_PER_PAGE,
+  const paginated =
+    filtered.slice(
+      (page - 1) *
+        PRODUCTS_PER_PAGE,
+      page *
+        PRODUCTS_PER_PAGE,
+    );
 
-    page * PRODUCTS_PER_PAGE,
+  const pageNumbers = Array.from(
+    { length: totalPages },
+    (_, i) => i + 1,
   );
-
-  const handleCategory = (cat: string) => {
-    setCategory(cat);
-
-    setPage(1);
-  };
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-
-    setPage(1);
-  };
-
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
     <>
+      {/* PRODUCT MODAL */}
+
+      {selectedProduct && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-[999]
+            flex
+            items-center
+            justify-center
+            bg-black/70
+            p-4
+            backdrop-blur-md
+          "
+        >
+          <div
+            className="
+              relative
+              max-h-[95vh]
+              w-full
+              max-w-6xl
+              overflow-y-auto
+              rounded-[32px]
+              bg-white
+              shadow-[0_20px_80px_rgba(0,0,0,0.35)]
+            "
+          >
+            {/* CLOSE */}
+
+            <button
+              onClick={() =>
+                setSelectedProduct(null)
+              }
+              className="
+                absolute
+                right-4
+                top-4
+                z-20
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-full
+                bg-white
+                shadow-lg
+                transition-all
+                hover:scale-110
+              "
+            >
+              <X className="h-5 w-5 text-violet-900" />
+            </button>
+
+            <div className="grid lg:grid-cols-2">
+              {/* IMAGE */}
+
+              <div
+                className="
+                  relative
+                  min-h-[350px]
+                  bg-gradient-to-br
+                  from-violet-100
+                  via-pink-50
+                  to-fuchsia-100
+                "
+              >
+                <img
+                  src={
+                    selectedProduct.imagenUrl ||
+                    "/placeholder.png"
+                  }
+                  alt={
+                    selectedProduct.nombre
+                  }
+                  className="
+                    h-full
+                    w-full
+                    object-cover
+                  "
+                />
+              </div>
+
+              {/* CONTENT */}
+
+              <div className="flex flex-col justify-between p-6 md:p-10">
+                <div>
+                  <div
+                    className="
+                      mb-4
+                      inline-flex
+                      items-center
+                      gap-2
+                      rounded-full
+                      bg-violet-100
+                      px-4
+                      py-2
+                      text-sm
+                      font-bold
+                      text-violet-700
+                    "
+                  >
+                    <Eye className="h-4 w-4" />
+                    Vista detallada
+                  </div>
+
+                  <h2
+                    className="
+                      text-3xl
+                      font-black
+                      leading-tight
+                      text-violet-950
+                      md:text-5xl
+                    "
+                  >
+                    {
+                      selectedProduct.nombre
+                    }
+                  </h2>
+
+                  <div
+                    className="
+                      mt-5
+                      text-5xl
+                      font-black
+                      text-fuchsia-600
+                    "
+                  >
+                    {formatCurrency(
+                      Number(
+                        selectedProduct.precio,
+                      ),
+                    )}
+                  </div>
+
+                  {/* DETAILS */}
+
+                  <div className="mt-10 space-y-5">
+                    {/* STATUS */}
+
+                    <div
+                      className="
+                        flex
+                        items-start
+                        gap-4
+                        rounded-3xl
+                        border
+                        border-violet-100
+                        bg-violet-50
+                        p-5
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          h-14
+                          w-14
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-violet-200
+                        "
+                      >
+                        <Package className="h-6 w-6 text-violet-900" />
+                      </div>
+
+                      <div>
+                        <h4 className="font-black text-violet-950">
+                          Estado
+                        </h4>
+
+                        <p className="mt-1 text-sm text-violet-600">
+                          {selectedProduct.estado
+                            ? "Disponible"
+                            : "No disponible"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* CATEGORY */}
+
+                    <div
+                      className="
+                        flex
+                        items-start
+                        gap-4
+                        rounded-3xl
+                        border
+                        border-pink-100
+                        bg-pink-50
+                        p-5
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          h-14
+                          w-14
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-pink-200
+                        "
+                      >
+                        <Tag className="h-6 w-6 text-pink-900" />
+                      </div>
+
+                      <div>
+                        <h4 className="font-black text-violet-950">
+                          Categorías
+                        </h4>
+
+                        <p className="mt-1 text-sm text-violet-600">
+                          {selectedProduct.categorias
+                            ?.map(
+                              (c) =>
+                                c.nombre,
+                            )
+                            .join(", ") ||
+                            "Sin categoría"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* DETAILS */}
+
+                    <div
+                      className="
+                        flex
+                        items-start
+                        gap-4
+                        rounded-3xl
+                        border
+                        border-fuchsia-100
+                        bg-fuchsia-50
+                        p-5
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          h-14
+                          w-14
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-fuchsia-200
+                        "
+                      >
+                        <BadgeDollarSign className="h-6 w-6 text-fuchsia-900" />
+                      </div>
+
+                      <div>
+                        <h4 className="font-black text-violet-950">
+                          Detalles
+                        </h4>
+
+                        <p className="mt-1 text-sm text-violet-600">
+                          Tamaño:{" "}
+                          {selectedProduct.color ||
+                            "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BUTTON */}
+
+                <Button
+                  onClick={() =>
+                    addToCart(
+                      selectedProduct,
+                    )
+                  }
+                  className="
+                    mt-10
+                    h-14
+                    w-full
+                    rounded-2xl
+                    bg-gradient-to-r
+                    from-violet-600
+                    to-fuchsia-500
+                    text-lg
+                    font-bold
+                    text-white
+                    shadow-[0_20px_40px_rgba(168,85,247,0.35)]
+                    transition-all
+                    hover:scale-[1.01]
+                  "
+                >
+                  <ShoppingCart className="mr-3 h-5 w-5" />
+                  Agregar al carrito
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CART BUTTON */}
 
       <button
-        onClick={() => setCartOpen(true)}
+        onClick={() =>
+          setCartOpen(true)
+        }
         className="
           fixed
           bottom-6
@@ -250,351 +673,142 @@ export default function ProductsSection() {
         )}
       </button>
 
-      {/* SIDEBAR */}
+      {/* CART SIDEBAR */}
 
       <div
         className={cn(
-          "fixed right-0 top-0 z-[100] h-full w-full max-w-md bg-white shadow-2xl transition-transform duration-500 ease-in-out",
-          cartOpen ? "translate-x-0" : "translate-x-full",
+          "fixed right-0 top-0 z-[100] flex h-screen w-full max-w-md flex-col overflow-hidden bg-white shadow-[0_20px_80px_rgba(0,0,0,0.18)] transition-transform duration-500 ease-in-out",
+          cartOpen
+            ? "translate-x-0"
+            : "translate-x-full",
         )}
       >
         {/* HEADER */}
 
-        {/* SIDEBAR */}
-
         <div
-          className={cn(
-            "fixed right-0 top-0 z-[100] flex h-screen w-full max-w-md flex-col overflow-hidden bg-white shadow-[0_20px_80px_rgba(0,0,0,0.18)] transition-transform duration-500 ease-in-out",
-            cartOpen ? "translate-x-0" : "translate-x-full",
-          )}
-        >
-          {/* HEADER */}
-
-          <div
-            className="
-      flex
-      items-center
-      justify-between
-      border-b
-      border-violet-100
-      bg-gradient-to-r
-      from-violet-50
-      to-pink-50
-      px-6
-      py-5
-    "
-          >
-            <div>
-              <h3
-                className="
-          text-2xl
-          font-black
-          text-violet-950
-        "
-              >
-                Mi carrito
-              </h3>
-
-              <p className="text-sm text-violet-500">
-                {cart.length} productos agregados
-              </p>
-            </div>
-
-            <button
-              onClick={() => setCartOpen(false)}
-              className="
-        flex
-        h-11
-        w-11
-        items-center
-        justify-center
-        rounded-full
-        bg-white
-        text-violet-700
-        shadow-md
-        transition-all
-        hover:scale-105
-      "
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* CONTENT */}
-
-          <div
-            className="
-      flex-1
-      overflow-y-auto
-      px-5
-      py-5
-    "
-          >
-            {cart.length === 0 ? (
-              <div
-                className="
-          flex
-          h-full
-          flex-col
-          items-center
-          justify-center
-          text-center
-        "
-              >
-                <div
-                  className="
-            mb-5
+          className="
             flex
-            h-24
-            w-24
             items-center
-            justify-center
-            rounded-full
-            bg-violet-100
+            justify-between
+            border-b
+            border-violet-100
+            bg-gradient-to-r
+            from-violet-50
+            to-pink-50
+            px-6
+            py-5
           "
-                >
-                  <ShoppingCart className="h-10 w-10 text-violet-500" />
-                </div>
-
-                <h4
-                  className="
-            text-2xl
-            font-black
-            text-violet-950
-          "
-                >
-                  Tu carrito está vacío
-                </h4>
-
-                <p className="mt-3 max-w-xs text-violet-500">
-                  Agrega productos para comenzar tu compra.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="
-              flex
-              gap-4
-              rounded-[28px]
-              border
-              border-violet-100
-              bg-gradient-to-r
-              from-violet-50/70
-              to-pink-50/70
-              p-4
-            "
-                  >
-                    {/* IMAGE */}
-
-                    <div
-                      className="
-                relative
-                h-24
-                w-24
-                overflow-hidden
-                rounded-2xl
-                bg-white
-                shadow-md
+        >
+          <div>
+            <h3
+              className="
+                text-2xl
+                font-black
+                text-violet-950
               "
-                    >
-                      <img
-                        src={item.image || "/placeholder.png"}
-                        alt={item.name}
-                        className="
-                  h-full
-                  w-full
-                  object-cover
-                "
-                      />
-                    </div>
+            >
+              Mi carrito
+            </h3>
 
-                    {/* INFO */}
-
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div>
-                        <h4
-                          className="
-                    line-clamp-2
-                    text-sm
-                    font-black
-                    text-violet-950
-                  "
-                        >
-                          {item.name}
-                        </h4>
-
-                        <p
-                          className="
-                    mt-2
-                    text-xl
-                    font-black
-                    text-fuchsia-600
-                  "
-                        >
-                          {formatCurrency(item.price)}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="
-                  mt-3
-                  flex
-                  items-center
-                  gap-2
-                  text-sm
-                  font-semibold
-                  text-rose-500
-                  transition-all
-                  hover:text-rose-600
-                "
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-sm text-violet-500">
+              {cart.length} productos agregados
+            </p>
           </div>
 
-          {/* FOOTER */}
+          <button
+            onClick={() =>
+              setCartOpen(false)
+            }
+            className="
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-full
+              bg-white
+              text-violet-700
+              shadow-md
+              transition-all
+              hover:scale-105
+            "
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          {cart.length > 0 && (
-            <div
-              className="
-        sticky
-        bottom-0
-        border-t
-        border-violet-100
-        bg-white
-        p-5
-        shadow-[0_-10px_30px_rgba(0,0,0,0.06)]
-      "
-            >
-              {/* TOTAL */}
+        {/* CONTENT */}
 
-              <div
-                className="
-          mb-5
-          flex
-          items-center
-          justify-between
-        "
-              >
-                <span
+        <div className="flex-1 overflow-y-auto p-5">
+          {cart.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <ShoppingCart className="mb-4 h-14 w-14 text-violet-300" />
+
+              <h4 className="text-xl font-black text-violet-950">
+                Tu carrito está vacío
+              </h4>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {cart.map((item) => (
+                <div
+                  key={item.id}
                   className="
-            text-lg
-            font-bold
-            text-violet-950
-          "
+                    flex
+                    gap-4
+                    rounded-3xl
+                    border
+                    border-violet-100
+                    bg-violet-50/60
+                    p-4
+                  "
                 >
-                  Total
-                </span>
+                  <div className="h-24 w-24 overflow-hidden rounded-2xl bg-white shadow-md">
+                    <img
+                      src={
+                        item.image ||
+                        "/placeholder.png"
+                      }
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
 
-                <span
-                  className="
-            text-3xl
-            font-black
-            text-fuchsia-600
-          "
-                >
-                  {formatCurrency(
-                    cart.reduce((acc, item) => acc + item.price, 0),
-                  )}
-                </span>
-              </div>
+                  <div className="flex flex-1 flex-col justify-between">
+                    <div>
+                      <h4 className="line-clamp-2 text-sm font-black text-violet-950">
+                        {item.name}
+                      </h4>
 
-              {/* BUTTONS */}
+                      <p className="mt-2 text-xl font-black text-fuchsia-600">
+                        {formatCurrency(
+                          item.price,
+                        )}
+                      </p>
+                    </div>
 
-              <div className="space-y-3">
-                <Button
-                  onClick={() => {
-                    if (cart.length === 0) return;
-
-                    const total = cart.reduce(
-                      (acc, item) => acc + item.price,
-                      0,
-                    );
-
-                    const productsText = cart
-                      .map(
-                        (item, index) => `
-----------------------------
-
-PRODUCTO ${index + 1}
-
-Nombre:
-${item.name}
-
-Precio:
-${formatCurrency(item.price)}
-
-Imagen:
-${item.image || "Sin imagen"}
-`,
-                      )
-                      .join("\n");
-
-                    const message = encodeURIComponent(`
-Hola,
-
-Me gustaría comprar los siguientes productos:
-
-${productsText}
-
-----------------------------
-
-TOTAL:
-${formatCurrency(total)}
-
-Muchas gracias.
-`);
-
-                    window.open(
-                      `https://wa.me/573203009633?text=${message}`,
-                      "_blank",
-                    );
-                  }}
-                  className="
-            h-14
-            w-full
-            rounded-2xl
-            bg-gradient-to-r
-            from-emerald-500
-            to-green-500
-            text-lg
-            font-bold
-            text-white
-            shadow-[0_15px_35px_rgba(34,197,94,0.25)]
-            transition-all
-            hover:scale-[1.01]
-            hover:from-emerald-600
-            hover:to-green-600
-          "
-                >
-                  Comprar por WhatsApp
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={clearCart}
-                  className="
-            h-12
-            w-full
-            rounded-2xl
-            border-rose-200
-            text-rose-500
-            hover:bg-rose-50
-          "
-                >
-                  Vaciar carrito
-                </Button>
-              </div>
+                    <button
+                      onClick={() =>
+                        removeFromCart(
+                          item.id,
+                        )
+                      }
+                      className="
+                        mt-3
+                        flex
+                        items-center
+                        gap-2
+                        text-sm
+                        font-semibold
+                        text-rose-500
+                      "
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -602,52 +816,28 @@ Muchas gracias.
         {/* FOOTER */}
 
         {cart.length > 0 && (
-          <div
-            className="
-              border-t
-              border-violet-100
-              bg-white
-              p-5
-            "
-          >
-            {/* TOTAL */}
-
-            <div
-              className="
-                mb-5
-                flex
-                items-center
-                justify-between
-              "
-            >
-              <span
-                className="
-                  text-lg
-                  font-bold
-                  text-violet-950
-                "
-              >
+          <div className="border-t border-violet-100 bg-white p-5">
+            <div className="mb-5 flex items-center justify-between">
+              <span className="text-lg font-bold text-violet-950">
                 Total
               </span>
 
-              <span
-                className="
-                  text-2xl
-                  font-black
-                  text-fuchsia-600
-                "
-              >
+              <span className="text-3xl font-black text-fuchsia-600">
                 {formatCurrency(
-                  cart.reduce((acc, item) => acc + item.price, 0),
+                  cart.reduce(
+                    (acc, item) =>
+                      acc + item.price,
+                    0,
+                  ),
                 )}
               </span>
             </div>
 
-            {/* BUTTONS */}
-
             <div className="space-y-3">
               <Button
-                onClick={handleBuyWhatsApp}
+                onClick={
+                  handleBuyWhatsApp
+                }
                 className="
                   h-14
                   w-full
@@ -658,9 +848,6 @@ Muchas gracias.
                   text-lg
                   font-bold
                   text-white
-                  shadow-xl
-                  hover:from-emerald-600
-                  hover:to-green-600
                 "
               >
                 Comprar por WhatsApp
@@ -675,7 +862,6 @@ Muchas gracias.
                   rounded-2xl
                   border-rose-200
                   text-rose-500
-                  hover:bg-rose-50
                 "
               >
                 Vaciar carrito
@@ -689,7 +875,9 @@ Muchas gracias.
 
       {cartOpen && (
         <div
-          onClick={() => setCartOpen(false)}
+          onClick={() =>
+            setCartOpen(false)
+          }
           className="
             fixed
             inset-0
@@ -700,7 +888,7 @@ Muchas gracias.
         />
       )}
 
-      {/* PRODUCTS SECTION */}
+      {/* SECTION */}
 
       <section
         id="productos"
@@ -711,29 +899,40 @@ Muchas gracias.
           py-24
         "
       >
-        {/* Decorative bg */}
-
-        <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-brand-magenta via-brand-violet to-brand-sky" />
-
-        <div className="absolute -right-48 -top-48 h-96 w-96 blob bg-pink-50 opacity-80" />
-
-        <div className="absolute -bottom-48 -left-48 h-96 w-96 blob bg-violet-50 opacity-80" />
-
         <div className="container relative z-10 mx-auto px-4">
-          {/* Header */}
+          {/* HEADER */}
 
           <div className="mb-12 text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-50 px-4 py-2 text-sm font-semibold text-brand-magenta">
+            <div
+              className="
+                mb-4
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                bg-pink-50
+                px-4
+                py-2
+                text-sm
+                font-semibold
+                text-brand-magenta
+              "
+            >
               🎨 Nuestra Colección
             </div>
 
             <h2
-              className="mb-4 text-4xl font-black md:text-5xl"
-              style={{
-                fontFamily: "var(--font-display)",
-              }}
+              className="
+                mb-4
+                text-4xl
+                font-black
+                md:text-5xl
+              "
             >
-              Moldes para <span className="text-gradient">Cada Ocasión</span>
+              Moldes para{" "}
+              <span className="text-gradient">
+                Cada Ocasión
+              </span>
             </h2>
 
             <p className="mx-auto max-w-xl text-lg text-muted-foreground">
@@ -741,19 +940,21 @@ Muchas gracias.
             </p>
           </div>
 
-          {/* Search + Filter */}
+          {/* SEARCH */}
 
           <div className="mb-8 flex flex-col gap-4 md:flex-row">
-            {/* SEARCH */}
-
             <div className="relative mx-auto max-w-md flex-1 md:mx-0">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
               <input
                 type="text"
-                placeholder="Buscar moldes..."
+                placeholder="Buscar productos..."
                 value={search}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value,
+                  )
+                }
                 className="
                   w-full
                   rounded-full
@@ -777,37 +978,69 @@ Muchas gracias.
               <SlidersHorizontal className="hidden h-4 w-4 text-muted-foreground md:block" />
 
               {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategory(cat)}
-                  className={cn(
-                    "rounded-full border px-4 py-2 text-xs font-semibold transition-all",
-                    category === cat
-                      ? "bg-gradient-to-r from-brand-magenta to-brand-violet text-white border-transparent shadow-md"
-                      : "border-pink-100 bg-white text-muted-foreground hover:border-brand-magenta hover:text-brand-magenta",
-                  )}
-                >
-                  {cat}
-                </button>
-              ))}
+  <button
+    key={cat}
+    onClick={() => {
+      setCategory(cat);
+
+      setPage(1);
+    }}
+    className={cn(
+      `
+        relative
+        overflow-hidden
+        rounded-full
+        border
+        px-5
+        py-2.5
+        text-sm
+        font-bold
+        transition-all
+        duration-300
+        backdrop-blur-xl
+        hover:scale-105
+        hover:shadow-xl
+      `,
+      category === cat
+        ? `
+            border-transparent
+            bg-gradient-to-r
+            from-violet-600
+            via-fuchsia-500
+            to-pink-500
+            text-white
+            shadow-[0_10px_30px_rgba(168,85,247,0.45)]
+          `
+        : `
+            border-violet-200
+            bg-white
+            text-violet-700
+            hover:border-fuchsia-300
+            hover:bg-violet-50
+            hover:text-fuchsia-600
+          `,
+    )}
+  >
+    <span className="relative z-10">
+      {cat}
+    </span>
+
+    {category === cat && (
+      <div
+        className="
+          absolute
+          inset-0
+          animate-pulse
+          bg-white/10
+        "
+      />
+    )}
+  </button>
+))}
             </div>
           </div>
 
-          {/* Results count */}
-
-          <p className="mb-6 text-center text-sm text-muted-foreground md:text-left">
-            Mostrando{" "}
-            <span className="font-semibold text-foreground">
-              {paginated.length}
-            </span>{" "}
-            de{" "}
-            <span className="font-semibold text-foreground">
-              {filtered.length}
-            </span>{" "}
-            productos
-          </p>
-
-          {/* LOADING */}
+          {/* PRODUCTS */}
 
           {loading ? (
             <div className="flex h-[400px] items-center justify-center">
@@ -815,64 +1048,193 @@ Muchas gracias.
             </div>
           ) : (
             <>
-              {/* GRID */}
-
-              {paginated.length > 0 ? (
-                <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {paginated.map((product) => (
-                    <ProductCard
+              <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {paginated.map(
+                  (product) => (
+                    <div
                       key={product.id}
-                      refreshCart={refreshCart}
-                      product={{
-                        id: Number(product.id),
+                      className="
+                        group
+                        overflow-hidden
+                        rounded-[30px]
+                        border
+                        border-violet-100
+                        bg-white
+                        shadow-md
+                        transition-all
+                        duration-500
+                        hover:-translate-y-2
+                        hover:shadow-2xl
+                      "
+                    >
+                      {/* IMAGE */}
 
-                        name: product.nombre,
-
-                        category:
-                          product.categorias?.[0]?.nombre || "Sin categoría",
-
-                        description: `
-Color: ${product.color || "N/A"}
-• Estado: ${product.estado ? "Activo" : "Inactivo"}
-• Categorías: ${
-                          product.categorias?.map((c) => c.nombre).join(", ") ||
-                          "Sin categoría"
+                      <div
+                        onClick={() =>
+                          setSelectedProduct(
+                            product,
+                          )
                         }
-`,
+                        className="
+                          relative
+                          h-64
+                          cursor-pointer
+                          overflow-hidden
+                          bg-gradient-to-br
+                          from-violet-100
+                          via-pink-50
+                          to-fuchsia-100
+                        "
+                      >
+                        <img
+                          src={
+                            product.imagenUrl ||
+                            "/placeholder.png"
+                          }
+                          alt={
+                            product.nombre
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                            transition-transform
+                            duration-700
+                            group-hover:scale-110
+                          "
+                        />
 
-                        price: Number(product.precio),
+                        {/* OVERLAY */}
 
-                        image: product.imagenUrl || "/placeholder.png",
+                        <div
+                          className="
+                            absolute
+                            inset-0
+                            bg-black/0
+                            transition-all
+                            duration-500
+                            group-hover:bg-black/20
+                          "
+                        />
 
-                        emoji: "🎨",
+                        {/* VIEW BUTTON */}
 
-                        colors: ["from-violet-100", "to-pink-100"],
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="py-24 text-center">
-                  <div className="mb-4 text-6xl">🔍</div>
+                        <div
+                          className="
+                            absolute
+                            inset-0
+                            flex
+                            items-center
+                            justify-center
+                            opacity-0
+                            transition-all
+                            duration-500
+                            group-hover:opacity-100
+                          "
+                        >
+                          <div
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                              rounded-full
+                              bg-white/90
+                              px-5
+                              py-3
+                              font-bold
+                              text-violet-700
+                              shadow-xl
+                              backdrop-blur-xl
+                            "
+                          >
+                            <Eye className="h-5 w-5" />
+                            Ver producto
+                          </div>
+                        </div>
+                      </div>
 
-                  <h3 className="mb-2 text-xl font-bold">
-                    No encontramos resultados
-                  </h3>
+                      {/* CONTENT */}
 
-                  <p className="text-muted-foreground">
-                    Intenta con otro término de búsqueda o categoría
-                  </p>
-                </div>
-              )}
+                      <div className="p-5">
+                        <div className="mb-2">
+                          <span
+                            className="
+                              rounded-full
+                              bg-violet-100
+                              px-3
+                              py-1
+                              text-xs
+                              font-bold
+                              text-violet-700
+                            "
+                          >
+                            {product
+                              .categorias?.[0]
+                              ?.nombre ||
+                              "Sin categoría"}
+                          </span>
+                        </div>
 
-              {/* Pagination */}
+                        <h3 className="line-clamp-2 text-xl font-black text-violet-950">
+                          {product.nombre}
+                        </h3>
+
+                        <p className="mt-2 text-sm text-violet-500">
+                          Tamaño:{" "}
+                          {product.color ||
+                            "N/A"}
+                        </p>
+
+                        <div className="mt-5 flex items-center justify-between gap-4">
+                          <div className="text-3xl font-black text-fuchsia-600">
+                            {formatCurrency(
+                              Number(
+                                product.precio,
+                              ),
+                            )}
+                          </div>
+
+                          <Button
+                            onClick={() =>
+                              addToCart(
+                                product,
+                              )
+                            }
+                            className="
+                              h-11
+                              rounded-2xl
+                              bg-gradient-to-r
+                              from-violet-600
+                              to-fuchsia-500
+                              px-5
+                              text-white
+                            "
+                          >
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Comprar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+
+              {/* PAGINATION */}
 
               {totalPages > 1 && (
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={() =>
+                      setPage((p) =>
+                        Math.max(
+                          1,
+                          p - 1,
+                        ),
+                      )
+                    }
                     disabled={page === 1}
                     className="gap-1"
                   >
@@ -880,26 +1242,39 @@ Color: ${product.color || "N/A"}
                     Anterior
                   </Button>
 
-                  {pageNumbers.map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={cn(
-                        "h-10 w-10 rounded-full text-sm font-semibold transition-all",
-                        n === page
-                          ? "page-active scale-110 shadow-lg"
-                          : "border border-pink-100 bg-white text-muted-foreground hover:border-brand-magenta hover:text-brand-magenta",
-                      )}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                  {pageNumbers.map(
+                    (n) => (
+                      <button
+                        key={n}
+                        onClick={() =>
+                          setPage(n)
+                        }
+                        className={cn(
+                          "h-10 w-10 rounded-full text-sm font-semibold transition-all",
+                          n === page
+                            ? "bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-lg"
+                            : "border border-pink-100 bg-white text-muted-foreground hover:border-brand-magenta hover:text-brand-magenta",
+                        )}
+                      >
+                        {n}
+                      </button>
+                    ),
+                  )}
 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
+                    onClick={() =>
+                      setPage((p) =>
+                        Math.min(
+                          totalPages,
+                          p + 1,
+                        ),
+                      )
+                    }
+                    disabled={
+                      page === totalPages
+                    }
                     className="gap-1"
                   >
                     Siguiente
