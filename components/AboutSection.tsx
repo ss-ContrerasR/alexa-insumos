@@ -1,5 +1,6 @@
 import { Heart, Award, Users, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const values = [
   {
@@ -29,7 +30,7 @@ const values = [
 ];
 
 const highlights = [
-  "Más de 10 años de experiencia en el sector",
+  "Más de 5 años de experiencia en el sector",
   "Diseños exclusivos y originales",
   "Materiales aptos para alimentos certificados",
   "Envíos a toda Colombia",
@@ -83,32 +84,95 @@ export default function AboutSection() {
           {/* Visual */}
           <div className="relative flex justify-center">
             {/* Avatar / illustration */}
-            <div className="relative w-72 h-72">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-brand-magenta via-brand-violet to-brand-sky opacity-20 rotate-6" />
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-brand-amber to-brand-coral opacity-20 -rotate-6" />
-              <div className="relative w-full h-full rounded-3xl bg-gradient-to-br from-pink-100 to-violet-100 flex items-center justify-center shadow-2xl border-4 border-white">
-                <div className="text-center">
-                  <div className="text-8xl mb-3">👩‍🎨</div>
-                  <div
-                    className="text-lg font-bold text-foreground"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    Creadora & Artista
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Fundadora de Alexa Insumos
+            {/* FOTO FUNDADORA */}
+            <div className="relative flex justify-center">
+              <div className="relative w-72 h-72 md:w-80 md:h-80">
+                {/* Fondos decorativos */}
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-brand-magenta via-brand-violet to-brand-sky opacity-20 rotate-6" />
+
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-brand-amber to-brand-coral opacity-20 -rotate-6" />
+
+                {/* Foto */}
+                <div className="relative h-full w-full overflow-hidden rounded-[32px] border-4 border-white bg-white shadow-2xl">
+                  <Image
+                    src="/photos/mine.jpeg"
+                    alt="Alexa - Fundadora de Alexa Insumos"
+                    fill
+                    priority
+                    className="object-cover"
+                  />
+                </div>
+
+                {/* Badge experiencia */}
+                <div
+                  className="
+        absolute
+        -top-4
+        -right-4
+        rounded-2xl
+        border
+        border-pink-100
+        bg-white
+        p-4
+        shadow-xl
+      "
+                >
+                  <div className="text-2xl">🏆</div>
+
+                  <div className="mt-1 text-xs font-bold text-foreground">
+                    +5 años
                   </div>
                 </div>
-              </div>
 
-              {/* Floating badges */}
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-3 border border-pink-100">
-                <div className="text-2xl">🏆</div>
-                <div className="text-xs font-bold text-foreground mt-1">10+ años</div>
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-3 border border-violet-100">
-                <div className="text-2xl">💝</div>
-                <div className="text-xs font-bold text-foreground mt-1">2K+ clientes</div>
+                {/* Badge clientes */}
+                <div
+                  className="
+        absolute
+        -bottom-4
+        -left-4
+        rounded-2xl
+        border
+        border-violet-100
+        bg-white
+        p-4
+        shadow-xl
+      "
+                >
+                  <div className="text-2xl">💝</div>
+
+                  <div className="mt-1 text-xs font-bold text-foreground">
+                    2K+ clientes
+                  </div>
+                </div>
+
+                {/* Etiqueta */}
+                <div
+                  className="
+        absolute
+        left-1/2
+        -translate-x-1/2
+        -bottom-10
+        rounded-full
+        bg-white
+        px-5
+        py-2
+        shadow-lg
+        border
+      "
+                >
+                  <p
+                    className="font-bold text-violet-700"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    Creadora & Fundadora
+                  </p>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    Alexa Insumos
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -119,18 +183,19 @@ export default function AboutSection() {
               className="text-3xl font-black mb-4"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Hola, soy{" "}
-              <span className="text-gradient">Alexa</span> 👋
+              Hola, soy <span className="text-gradient">Alexa</span> 👋
             </h3>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Soy artesana y apasionada de la repostería creativa. Hace más de 10 años
-              decidí transformar mi amor por los moldes en un negocio que ayuda a miles
-              de personas a crear momentos mágicos e irrepetibles.
+              Soy artesana y apasionada de la repostería creativa. Hace más de
+              5 años decidí transformar mi amor por los moldes en un negocio
+              que ayuda a miles de personas a crear momentos mágicos e
+              irrepetibles.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Cada molde en nuestra tienda es seleccionado o diseñado por mí, con
-              materiales de la más alta calidad, pensando siempre en facilitarte el
-              trabajo y ayudarte a lograr resultados increíbles en casa.
+              Cada molde en nuestra tienda es seleccionado o diseñado por mí,
+              con materiales de la más alta calidad, pensando siempre en
+              facilitarte el trabajo y ayudarte a lograr resultados increíbles
+              en casa.
             </p>
 
             {/* Highlights */}
@@ -143,14 +208,10 @@ export default function AboutSection() {
               ))}
             </ul>
 
-            <div className="flex gap-3 flex-wrap">
-              <Button>
-                Ver Mis Productos
-              </Button>
-              <Button variant="outline">
-                Contáctame
-              </Button>
-            </div>
+            {/* <div className="flex gap-3 flex-wrap">
+              <Button>Ver Mis Productos</Button>
+              <Button variant="outline">Contáctame</Button>
+            </div> */}
           </div>
         </div>
 

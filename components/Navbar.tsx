@@ -1,91 +1,293 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, Menu, X, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const links = [
-    { label: "Inicio", href: "#inicio" },
-    { label: "Productos", href: "#productos" },
-    { label: "Quién Soy", href: "#quien-soy" },
-    { label: "Contacto", href: "#footer" },
+    {
+      label: "Inicio",
+      href: "#inicio",
+    },
+    {
+      label: "Productos",
+      href: "#productos",
+    },
+    {
+      label: "Quién Soy",
+      href: "#quien-soy",
+    },
+    {
+      label: "Contacto",
+      href: "#footer",
+    },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-pink-100 shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <a href="#inicio" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-magenta to-brand-violet flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <span
-            className="text-xl font-bold"
-            style={{ fontFamily: "var(--font-display)" }}
+    <nav
+      className="
+        fixed
+        top-0
+        left-0
+        right-0
+        z-50
+
+        border-b
+        border-white/20
+
+        bg-white/55
+        backdrop-blur-2xl
+
+        shadow-[0_8px_32px_rgba(0,0,0,0.08)]
+      "
+    >
+      <div
+        className="
+          container
+          mx-auto
+          flex
+          h-20
+          items-center
+          justify-between
+          px-4
+        "
+      >
+        {/* LOGO + MARCA */}
+
+        <a
+          href="#inicio"
+          className="
+            group
+            flex
+            items-center
+            gap-3
+            transition-all
+            duration-300
+            hover:scale-[1.02]
+          "
+        >
+          <div
+            className="
+              flex
+              h-14
+              w-14
+              items-center
+              justify-center
+
+              rounded-2xl
+
+              bg-white/90
+              p-2
+
+              shadow-lg
+
+              transition-all
+              duration-300
+
+              group-hover:shadow-xl
+              group-hover:scale-105
+            "
           >
-            <span className="text-gradient">Alexa {" "}</span>
-            <span className="text-foreground">Insumos</span>
-          </span>
+            <Image
+              src="/logo.png"
+              alt="Alexa Insumos"
+              width={120}
+              height={120}
+              priority
+              className="
+                h-full
+                w-full
+                object-contain
+              "
+            />
+          </div>
+
+          <div className="hidden sm:block">
+            <h1
+              className="
+                text-xl
+                font-black
+                leading-none
+              "
+            >
+              <span
+                className="
+                  bg-gradient-to-r
+                  from-violet-600
+                  via-fuchsia-500
+                  to-pink-500
+                  bg-clip-text
+                  text-transparent
+                "
+              >
+                Alexa
+              </span>
+
+              <span className="ml-1 text-slate-800">
+                Insumos
+              </span>
+            </h1>
+
+            <p
+              className="
+                mt-1
+                text-xs
+                font-medium
+                tracking-widest
+                text-slate-500
+                uppercase
+              "
+            >
+              Catálogo Oficial
+            </p>
+          </div>
         </a>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
+        {/* DESKTOP */}
+
+        <div
+          className="
+            hidden
+            items-center
+            gap-8
+            md:flex
+          "
+        >
+          {links.map((link) => (
             <a
-              key={l.href}
-              href={l.href}
-              className="text-sm font-medium text-muted-foreground hover:text-brand-magenta transition-colors relative group"
+              key={link.href}
+              href={link.href}
+              className="
+                group
+                relative
+
+                text-sm
+                font-semibold
+
+                text-slate-600
+
+                transition-all
+                duration-300
+
+                hover:text-fuchsia-600
+              "
             >
-              {l.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-magenta to-brand-violet rounded-full transition-all group-hover:w-full" />
+              {link.label}
+
+              <span
+                className="
+                  absolute
+                  -bottom-1
+                  left-0
+
+                  h-[2px]
+                  w-0
+
+                  rounded-full
+
+                  bg-gradient-to-r
+                  from-violet-600
+                  to-fuchsia-500
+
+                  transition-all
+                  duration-300
+
+                  group-hover:w-full
+                "
+              />
             </a>
           ))}
         </div>
 
-        {/* Right */}
-        {/* <div className="flex items-center gap-3">
-          <button
-            className="relative p-2 rounded-full hover:bg-pink-50 transition-colors"
-            aria-label="Carrito"
-          >
-            <ShoppingBag className="w-5 h-5 text-brand-magenta" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-amber rounded-full text-[10px] font-bold text-white flex items-center justify-center">
-              0
-            </span>
-          </button>
-          <Button size="sm" className="hidden md:flex">
-            Comprar Ahora
-          </Button>
-          <button
-            className="md:hidden p-2 rounded-full hover:bg-pink-50"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div> */}
+        {/* MOBILE BUTTON */}
+
+        <button
+          onClick={() =>
+            setOpen(!open)
+          }
+          className="
+            flex
+            h-11
+            w-11
+            items-center
+            justify-center
+
+            rounded-xl
+
+            bg-white/50
+
+            backdrop-blur-md
+
+            transition-all
+
+            hover:bg-white/80
+
+            md:hidden
+          "
+        >
+          {open ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+        </button>
       </div>
 
-      {/* Mobile menu */}
-      {/* {open && (
-        <div className="md:hidden bg-white border-t border-pink-100 px-4 py-4 flex flex-col gap-3">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="py-2 text-sm font-medium text-muted-foreground hover:text-brand-magenta transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
-          <Button size="sm" className="w-full mt-2">
-            Comprar Ahoras
-          </Button>
+      {/* MOBILE MENU */}
+
+      <div
+        className={`
+          overflow-hidden
+          transition-all
+          duration-300
+
+          ${
+            open
+              ? "max-h-96 border-t border-white/20"
+              : "max-h-0"
+          }
+        `}
+      >
+        <div
+          className="
+            bg-white/70
+            backdrop-blur-2xl
+            px-4
+            py-4
+          "
+        >
+          <div className="flex flex-col gap-2">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() =>
+                  setOpen(false)
+                }
+                className="
+                  rounded-2xl
+                  px-4
+                  py-3
+
+                  font-medium
+
+                  text-slate-600
+
+                  transition-all
+
+                  hover:bg-white
+                  hover:text-fuchsia-600
+                "
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </div>
-      )} */}
+      </div>
     </nav>
   );
 }

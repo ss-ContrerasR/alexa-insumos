@@ -10,8 +10,8 @@ const links = {
   info: [
     { label: "Sobre Mí", href: "#quien-soy" },
     { label: "Cómo comprar", href: "#" },
-    { label: "Envíos y devoluciones", href: "#" },
-    { label: "Preguntas frecuentes", href: "#" },
+    // { label: "Envíos y devoluciones", href: "#" },
+    // { label: "Preguntas frecuentes", href: "#" },
   ],
 };
 
@@ -63,7 +63,7 @@ export default function Footer() {
               ))}
               {/* WhatsApp */}
               <a
-                href="#"
+                href="https://wa.me/573227680702"
                 aria-label="WhatsApp"
                 className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center transition-all hover:scale-110 hover:bg-green-600"
               >
@@ -131,8 +131,8 @@ export default function Footer() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500 mb-0.5">WhatsApp</div>
-                  <a href="https://wa.me/573001234567" className="text-sm text-gray-300 hover:text-white transition-colors">
-                    +57 300 000 0000
+                  <a href="https://wa.me/573227680702" className="text-sm text-gray-300 hover:text-white transition-colors">
+                    +57 322 768 0702
                   </a>
                 </div>
               </li>
@@ -143,7 +143,7 @@ export default function Footer() {
                 <div>
                   <div className="text-xs text-gray-500 mb-0.5">Email</div>
                   <a href="mailto:hola@moldearte.co" className="text-sm text-gray-300 hover:text-white transition-colors">
-                    AlexaInsumos@gmail.co
+                    alexandrapatinovivas@gmail.com
                   </a>
                 </div>
               </li>
@@ -159,7 +159,7 @@ export default function Footer() {
             </ul>
 
             {/* Newsletter mini */}
-            <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+            {/* <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
               <p className="text-xs text-gray-400 mb-3 font-medium">
                 📬 Recibe novedades y ofertas
               </p>
@@ -173,25 +173,28 @@ export default function Footer() {
                   ✓
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+        <div className="mt-14 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white">
           <p>
             © {new Date().getFullYear()} AlexaInsumos. Todos los derechos reservados.
           </p>
           <p className="flex items-center gap-1.5">
-            Hecho con{" "}
-            <Heart className="w-3.5 h-3.5 fill-brand-magenta text-brand-magenta" />{" "}
-            en Colombia
+            Hecho por:{" "}
+            {/* <Heart className="w-3.5 h-3.5 fill-brand-magenta text-brand-magenta" />{" "} */}
+            Ing Sergio Contreras
           </p>
-          <div className="flex gap-4 text-xs">
+          <p>
+            Contacto: 3203009633
+          </p>
+          {/* <div className="flex gap-4 text-xs">
             <a href="#" className="hover:text-white transition-colors">Términos</a>
             <a href="#" className="hover:text-white transition-colors">Privacidad</a>
             <a href="#" className="hover:text-white transition-colors">Cookies</a>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

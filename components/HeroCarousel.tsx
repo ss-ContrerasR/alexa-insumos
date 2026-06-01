@@ -1,187 +1,438 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+import Image from "next/image";
+
+import {
+  ArrowDown,
+  ChevronRight,
+  Sparkles,
+  Tag,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { carouselSlides } from "@/lib/data";
-import { cn } from "@/lib/utils";
+
+const API_PRODUCTOS =
+  "https://catalogoapiv-001-site1.qtempurl.com/api/productos";
+
+interface Categoria {
+  id: string;
+  nombre: string;
+}
+
+interface Producto {
+  categorias?: Categoria[];
+}
 
 export default function HeroCarousel() {
-  const [current, setCurrent] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const goTo = useCallback(
-    (index: number) => {
-      if (animating) return;
-      setAnimating(true);
-      setTimeout(() => {
-        setCurrent(index);
-        setAnimating(false);
-      }, 300);
-    },
-    [animating]
-  );
-
-  const prev = () => goTo((current - 1 + carouselSlides.length) % carouselSlides.length);
-  const next = () => goTo((current + 1) % carouselSlides.length);
+  const [products, setProducts] = useState<Producto[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(next, 5000);
-    return () => clearInterval(timer);
-  });
+    const loadProducts = async () => {
+      try {
+        const response = await fetch(API_PRODUCTOS, {
+          cache: "no-store",
+        });
 
-  const slide = carouselSlides[current];
+        const data = await response.json();
+
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const categories = useMemo(() => {
+    const all = products.flatMap(
+      (product) =>
+        product.categorias?.map((c) => c.nombre) || [],
+    );
+
+    const unique = Array.from(new Set(all));
+
+    return unique.sort((a, b) => {
+      if (a.toLowerCase() === "hombres") return -1;
+      if (b.toLowerCase() === "hombres") return 1;
+
+      return a.localeCompare(b);
+    });
+  }, [products]);
+
+  const selectCategory = (category: string) => {
+    window.dispatchEvent(
+      new CustomEvent("select-category", {
+        detail: category,
+      }),
+    );
+  };
 
   return (
     <section
       id="inicio"
-      className="relative min-h-screen flex items-center overflow-hidden pt-16"
+      className="
+        relative
+        overflow-hidden
+        bg-gradient-to-br
+        from-[#fdf8ff]
+        via-[#f7f1ff]
+        to-[#efe7ff]
+        pt-28
+      "
     >
-      {/* Animated background */}
-      <div
-        className={cn(
-          "absolute inset-0 bg-gradient-to-br transition-all duration-700",
-          slide.gradient
-        )}
-        style={{ opacity: animating ? 0 : 1, transition: "opacity 0.4s" }}
-      />
-      <div className="absolute inset-0 bg-mesh opacity-50" />
+      {/* BACKGROUND */}
 
-      {/* Decorative blobs */}
-      <div
-        className="absolute -top-32 -left-32 w-96 h-96 blob opacity-30 animate-float"
-        style={{ background: `${slide.accent}40` }}
-      />
-      <div
-        className="absolute -bottom-20 -right-20 w-72 h-72 blob opacity-20 animate-float"
-        style={{ background: `${slide.accent}60`, animationDelay: "1.5s" }}
-      />
-      <div
-        className="absolute top-1/3 right-1/4 w-48 h-48 blob opacity-15 animate-float"
-        style={{ background: "#FFB34740", animationDelay: "0.8s" }}
-      />
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="
+            absolute
+            -top-32
+            -left-20
+            h-[500px]
+            w-[500px]
+            rounded-full
+            bg-violet-200/40
+            blur-[120px]
+          "
+        />
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Emoji */}
-          <div
-            className="text-8xl mb-6 inline-block animate-float"
-            style={{
-              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.15))",
-              opacity: animating ? 0 : 1,
-              transition: "opacity 0.3s",
-            }}
-          >
-            {slide.emoji}
+        <div
+          className="
+            absolute
+            top-0
+            right-0
+            h-[450px]
+            w-[450px]
+            rounded-full
+            bg-fuchsia-200/40
+            blur-[120px]
+          "
+        />
+
+        <div
+          className="
+            absolute
+            bottom-0
+            left-1/2
+            h-[350px]
+            w-[350px]
+            -translate-x-1/2
+            rounded-full
+            bg-purple-200/40
+            blur-[120px]
+          "
+        />
+      </div>
+
+      <div
+        className="
+          container
+          relative
+          z-10
+          mx-auto
+          px-4
+          pb-24
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-6xl
+            text-center
+          "
+        >
+          {/* LOGO */}
+
+          <div className="mb-12 flex justify-center">
+            <div
+              className="
+                rounded-[40px]
+                border
+                border-white/70
+                bg-white/80
+                p-6
+                backdrop-blur-xl
+                shadow-[0_20px_60px_rgba(124,58,237,0.12)]
+              "
+            >
+              <Image
+                src="/logo.png"
+                alt="Alexa Insumos"
+                width={320}
+                height={180}
+                priority
+                className="
+                  h-auto
+                  w-[240px]
+                  object-contain
+
+                  md:w-[320px]
+                "
+              />
+            </div>
           </div>
 
-          {/* Category pill */}
-          <div className="flex justify-center mb-6">
-            <span className="px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-sm text-sm font-semibold text-gray-700 shadow-sm border border-white/80">
-              ✨ Bienvenida a Alexa Insumos
+          {/* BADGE */}
+
+          <div className="mb-8 flex justify-center">
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-violet-200
+                bg-white/80
+                px-5
+                py-2
+                text-sm
+                font-semibold
+                text-violet-700
+                backdrop-blur-xl
+                shadow-lg
+              "
+            >
+              <Sparkles size={15} />
+              Catálogo Oficial Alexa Insumos
             </span>
           </div>
 
-          {/* Title */}
+          {/* TITULO */}
+
           <h1
-            className="text-5xl md:text-7xl font-black mb-6 leading-tight text-white"
-            style={{
-              fontFamily: "var(--font-display)",
-              textShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              opacity: animating ? 0 : 1,
-              transform: animating ? "translateY(20px)" : "translateY(0)",
-              transition: "all 0.4s ease",
-              whiteSpace: "pre-line",
-            }}
+            className="
+              mx-auto
+              max-w-5xl
+              text-5xl
+              font-black
+              leading-tight
+              text-slate-800
+
+              md:text-7xl
+            "
           >
-            {slide.title}
+            Encuentra el
+
+            <span
+              className="
+                block
+                bg-gradient-to-r
+                from-violet-600
+                via-fuchsia-500
+                to-purple-500
+                bg-clip-text
+                text-transparent
+              "
+            >
+              regalo perfecto
+            </span>
+
+            para cada ocasión
           </h1>
 
-          {/* Subtitle */}
+          {/* SUBTITULO */}
+
           <p
-            className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed"
-            style={{
-              textShadow: "0 2px 12px rgba(0,0,0,0.1)",
-              opacity: animating ? 0 : 1,
-              transition: "opacity 0.4s 0.1s",
-            }}
+            className="
+              mx-auto
+              mt-8
+              max-w-3xl
+              text-lg
+              leading-relaxed
+              text-slate-600
+
+              md:text-xl
+            "
           >
-            {slide.subtitle}
+            Descubre cientos de productos cuidadosamente
+            seleccionados para sorprender, celebrar y crear
+            momentos inolvidables.
           </p>
 
+          {/* CATEGORIAS */}
+
+          <div
+            className="
+              mt-14
+              flex
+              flex-wrap
+              justify-center
+              gap-3
+            "
+          >
+            {!loading &&
+              categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() =>
+                    selectCategory(category)
+                  }
+                  className="
+                    group
+                    flex
+                    items-center
+                    gap-2
+                    rounded-2xl
+                    border
+                    border-violet-200
+                    bg-white/80
+                    px-5
+                    py-3
+                    font-semibold
+                    text-slate-700
+                    backdrop-blur-xl
+                    shadow-md
+                    transition-all
+                    duration-300
+
+                    hover:-translate-y-1
+                    hover:border-violet-400
+                    hover:bg-white
+                    hover:text-violet-700
+                    hover:shadow-xl
+                  "
+                >
+                  <Tag size={16} />
+
+                  {category}
+
+                  <ChevronRight
+                    size={16}
+                    className="
+                      transition-transform
+                      group-hover:translate-x-1
+                    "
+                  />
+                </button>
+              ))}
+          </div>
+
           {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          <div
+            className="
+              mt-14
+              flex
+              justify-center
+            "
+          >
             <a href="#productos">
               <Button
                 size="lg"
-                className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 shadow-xl font-bold px-10 rounded-full"
+                className="
+                  h-16
+                  rounded-full
+                  bg-gradient-to-r
+                  from-violet-600
+                  to-fuchsia-500
+                  px-12
+                  text-lg
+                  font-black
+                  text-white
+                  shadow-[0_20px_40px_rgba(168,85,247,0.35)]
+                  transition-all
+                  hover:scale-105
+                "
               >
-                {slide.cta} →
+                Ver catálogo
               </Button>
             </a>
-            <a href="#quien-soy">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-white/80 bg-transparent text-white hover:bg-white/20 font-bold px-10 rounded-full"
+          </div>
+
+          {/* ESTADISTICAS */}
+
+          <div
+            className="
+              mx-auto
+              mt-20
+              grid
+              max-w-4xl
+              grid-cols-2
+              gap-4
+
+              md:grid-cols-4
+            "
+          >
+            {[
+              {
+                value: "2000+",
+                label: "Clientes",
+              },
+              {
+                value: "100%",
+                label: "Calidad",
+              },
+              {
+                value: "5+",
+                label: "Años",
+              },
+              {
+                value: "Colombia",
+                label: "Envíos",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="
+                  rounded-3xl
+                  border
+                  border-violet-100
+                  bg-white/70
+                  p-5
+                  text-center
+                  backdrop-blur-xl
+                  shadow-lg
+                "
               >
-                Conoce Nuestra Historia
-              </Button>
-            </a>
+                <div
+                  className="
+                    text-3xl
+                    font-black
+                    text-violet-700
+                  "
+                >
+                  {item.value}
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-sm
+                    text-slate-500
+                  "
+                >
+                  {item.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Nav arrows */}
-      <button
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm border border-white/50 flex items-center justify-center text-white hover:bg-white/50 transition-all hover:scale-110"
-        aria-label="Anterior"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      <button
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm border border-white/50 flex items-center justify-center text-white hover:bg-white/50 transition-all hover:scale-110"
-        aria-label="Siguiente"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
+      {/* SCROLL INDICATOR */}
 
-      {/* Dots */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {carouselSlides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={cn(
-              "rounded-full transition-all duration-300",
-              i === current
-                ? "w-8 h-3 bg-white shadow-lg"
-                : "w-3 h-3 bg-white/50 hover:bg-white/80"
-            )}
-            aria-label={`Slide ${i + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Stats bar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white/20 backdrop-blur-sm border-t border-white/30 py-4 px-4 z-20">
-        <div className="container mx-auto flex flex-wrap justify-center gap-8 md:gap-16">
-          {[
-            { value: "500+", label: "Diseños" },
-            { value: "2,000+", label: "Clientes Felices" },
-            { value: "5★", label: "Calificación" },
-            { value: "24h", label: "Envío Express" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center text-white">
-              <div className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>
-                {stat.value}
-              </div>
-              <div className="text-xs font-medium opacity-80">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+      <div
+        className="
+          absolute
+          bottom-8
+          left-1/2
+          -translate-x-1/2
+          text-violet-500
+        "
+      >
+        <ArrowDown
+          className="
+            animate-bounce
+          "
+        />
       </div>
     </section>
   );

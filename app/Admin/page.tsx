@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  AlertTriangle,
   ArrowLeft,
   CircleDollarSign,
   ImagePlus,
@@ -58,14 +59,11 @@ interface Producto {
   categorias?: Categoria[];
 }
 
-const API_BASE =
-  "https://catalogoapiv-001-site1.qtempurl.com/api";
+const API_BASE = "https://catalogoapiv-001-site1.qtempurl.com/api";
 
-const API_CATEGORIAS =
-  `${API_BASE}/categorias`;
+const API_CATEGORIAS = `${API_BASE}/categorias`;
 
-const API_PRODUCTOS =
-  `${API_BASE}/productos`;
+const API_PRODUCTOS = `${API_BASE}/productos`;
 
 export default function CatalogoDashboardPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -84,6 +82,14 @@ export default function CatalogoDashboardPage() {
   const [openCategoria, setOpenCategoria] = useState(false);
 
   const [openProducto, setOpenProducto] = useState(false);
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const [deleteData, setDeleteData] = useState<{
+    id: string;
+    nombre: string;
+    type: "producto" | "categoria";
+  } | null>(null);
 
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(
     null,
@@ -125,108 +131,91 @@ export default function CatalogoDashboardPage() {
     }
   };
 
-const loadData = async () => {
-  try {
-    setLoading(true);
+  const loadData = async () => {
+    try {
+      setLoading(true);
 
-    const [categoriasRes, productosRes] = await Promise.all([
-      fetch(API_CATEGORIAS, {
-        method: "GET",
+      const [categoriasRes, productosRes] = await Promise.all([
+        fetch(API_CATEGORIAS, {
+          method: "GET",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-        cache: "no-store",
-      }),
+          cache: "no-store",
+        }),
 
-      fetch(API_PRODUCTOS, {
-        method: "GET",
+        fetch(API_PRODUCTOS, {
+          method: "GET",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-        cache: "no-store",
-      }),
-    ]);
+          cache: "no-store",
+        }),
+      ]);
 
-    // VALIDATE HTTP
+      // VALIDATE HTTP
 
-    if (!categoriasRes.ok) {
-      throw new Error(
-        `Categorias HTTP Error: ${categoriasRes.status}`,
-      );
+      if (!categoriasRes.ok) {
+        throw new Error(`Categorias HTTP Error: ${categoriasRes.status}`);
+      }
+
+      if (!productosRes.ok) {
+        throw new Error(`Productos HTTP Error: ${productosRes.status}`);
+      }
+
+      // JSON
+
+      const categoriasData = await categoriasRes.json();
+
+      const productosData = await productosRes.json();
+
+      // VALIDATE ARRAY
+
+      setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+
+      setProductos(Array.isArray(productosData) ? productosData : []);
+    } catch (error) {
+      console.error("LOAD DATA ERROR:", error);
+
+      setCategorias([]);
+
+      setProductos([]);
+
+      showToast("Error", "No fue posible cargar la información", "error");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (!productosRes.ok) {
-      throw new Error(
-        `Productos HTTP Error: ${productosRes.status}`,
-      );
-    }
-
-    // JSON
-
-    const categoriasData =
-      await categoriasRes.json();
-
-    const productosData =
-      await productosRes.json();
-
-    // VALIDATE ARRAY
-
-    setCategorias(
-      Array.isArray(categoriasData)
-        ? categoriasData
-        : [],
-    );
-
-    setProductos(
-      Array.isArray(productosData)
-        ? productosData
-        : [],
-    );
-  } catch (error) {
-    console.error(
-      "LOAD DATA ERROR:",
-      error,
-    );
-
-    setCategorias([]);
-
-    setProductos([]);
-
-    showToast(
-      "Error",
-      "No fue posible cargar la información",
-      "error",
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  loadData();
-
-  const interval = setInterval(() => {
+  useEffect(() => {
     loadData();
-  }, 30000);
 
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000);
 
-  const filteredCategorias = useMemo(() => {
-    return categorias.filter((categoria) =>
-      categoria.nombre.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [categorias, search]);
+    return () => clearInterval(interval);
+  }, []);
 
-  const filteredProductos = useMemo(() => {
-    return productos.filter((producto) =>
-      producto.nombre.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [productos, search]);
+const filteredProductos = useMemo(() => {
+  const term = search.trim().toLowerCase();
+
+  return productos.filter((producto) =>
+    producto.nombre?.toLowerCase().includes(term),
+  );
+}, [productos, search]);
+
+const filteredCategorias = useMemo(() => {
+  const term = search.trim().toLowerCase();
+
+  return categorias.filter((categoria) =>
+    categoria.nombre?.toLowerCase().includes(term),
+  );
+}, [categorias, search]);
 
   const currentData =
     activeTab === "productos" ? filteredProductos : filteredCategorias;
@@ -423,6 +412,27 @@ useEffect(() => {
       showToast("Error", "No fue posible eliminar el producto", "error");
     }
   };
+
+  const confirmDelete = (
+    id: string,
+    nombre: string,
+    type: "producto" | "categoria",
+  ) => {
+    setDeleteData({
+      id,
+      nombre,
+      type,
+    });
+
+    setOpenDeleteDialog(true);
+  };
+
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [search]);
+
+
 
   return (
     <>
@@ -651,7 +661,7 @@ useEffect(() => {
             {" "}
             <div className="overflow-x-auto">
               <div
-              className="
+                className="
     flex
     flex-col
     gap-5
@@ -666,22 +676,22 @@ useEffect(() => {
     md:items-center
     md:justify-between
   "
-            >
-              {/* LEFT */}
-            {/* PAGINATION */}
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="text-sm font-semibold text-violet-700">
-                  Mostrar:
-                </p>
+              >
+                {/* LEFT */}
+                {/* PAGINATION */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm font-semibold text-violet-700">
+                    Mostrar:
+                  </p>
 
-                <select
-                  value={rowsPerPage}
-                  onChange={(e) => {
-                    setRowsPerPage(Number(e.target.value));
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value));
 
-                    setCurrentPage(1);
-                  }}
-                  className="
+                      setCurrentPage(1);
+                    }}
+                    className="
         h-11
         rounded-2xl
         border
@@ -698,28 +708,30 @@ useEffect(() => {
         focus:ring-4
         focus:ring-violet-100
       "
-                >
-                  {[5, 10, 15, 20, 50, 100].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
+                  >
+                    {[5, 10, 15, 20, 50, 100].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
 
-                <p className="text-sm text-violet-500">registros por página</p>
-              </div>
+                  <p className="text-sm text-violet-500">
+                    registros por página
+                  </p>
+                </div>
 
-              {/* RIGHT */}
+                {/* RIGHT */}
 
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className="
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className="
         h-11
         rounded-2xl
         border-violet-200
@@ -729,12 +741,12 @@ useEffect(() => {
         shadow-sm
         hover:bg-violet-50
       "
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
 
-                <div
-                  className="
+                  <div
+                    className="
         flex
         items-center
         rounded-2xl
@@ -746,18 +758,18 @@ useEffect(() => {
         text-violet-700
         shadow-sm
       "
-                >
-                  Página {currentPage} de {totalPages || 1}
-                </div>
+                  >
+                    Página {currentPage} de {totalPages || 1}
+                  </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className="
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className="
         h-11
         rounded-2xl
         border-violet-200
@@ -767,11 +779,11 @@ useEffect(() => {
         shadow-sm
         hover:bg-violet-50
       "
-                >
-                  <ArrowLeft className="h-4 w-4 rotate-180" />
-                </Button>
+                  >
+                    <ArrowLeft className="h-4 w-4 rotate-180" />
+                  </Button>
+                </div>
               </div>
-            </div>
               <table className="w-full min-w-[1200px] border-collapse">
                 <thead>
                   <tr className="border-b border-violet-100 bg-gradient-to-r from-violet-100/70 via-fuchsia-50 to-pink-100/70">
@@ -977,7 +989,13 @@ useEffect(() => {
   hover:scale-105
   hover:shadow-xl
 "
-                                  onClick={() => deleteProducto(producto.id)}
+                                  onClick={() =>
+                                    confirmDelete(
+                                      producto.id,
+                                      producto.nombre,
+                                      "producto",
+                                    )
+                                  }
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Eliminar
@@ -1038,7 +1056,13 @@ useEffect(() => {
                                   size="sm"
                                   variant="destructive"
                                   className="rounded-xl"
-                                  onClick={() => deleteCategoria(categoria.id)}
+                                  onClick={() =>
+                                    confirmDelete(
+                                      categoria.id,
+                                      categoria.nombre,
+                                      "categoria",
+                                    )
+                                  }
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Eliminar
@@ -1050,7 +1074,6 @@ useEffect(() => {
                 </tbody>
               </table>
             </div>
-
           </Card>
         </div>
         <Dialog open={openCategoria} onOpenChange={setOpenCategoria}>
@@ -1327,8 +1350,153 @@ useEffect(() => {
             </Button>
           </DialogContent>
         </Dialog>
-        <Toaster richColors position="top-right" />
+        <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+          <DialogContent
+            className="
+      overflow-hidden
+      rounded-[32px]
+      border
+      border-white/60
+      bg-white/95
+      shadow-[0_25px_80px_rgba(168,85,247,0.18)]
+      backdrop-blur-2xl
+      sm:max-w-md
+    "
+          >
+            <div
+              className="
+        absolute
+        inset-x-0
+        top-0
+        h-1
+        bg-gradient-to-r
+        from-rose-500
+        via-red-500
+        to-orange-500
+      "
+            />
+
+            <DialogHeader className="pt-4">
+              <div
+                className="
+          mx-auto
+          mb-5
+          flex
+          h-20
+          w-20
+          items-center
+          justify-center
+          rounded-full
+          bg-gradient-to-br
+          from-rose-100
+          to-red-100
+          shadow-inner
+        "
+              >
+                <AlertTriangle className="h-10 w-10 text-red-500" />
+              </div>
+
+              <DialogTitle
+                className="
+          text-center
+          text-2xl
+          font-black
+          text-violet-950
+        "
+              >
+                Confirmar eliminación
+              </DialogTitle>
+
+              <DialogDescription
+                className="
+          text-center
+          text-base
+          leading-relaxed
+          text-violet-500
+        "
+              >
+                Esta acción eliminará permanentemente el elemento seleccionado.
+                <br />
+                No podrás recuperarlo después.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div
+              className="
+    mt-4
+    rounded-2xl
+    border
+    border-red-100
+    bg-red-50
+    p-4
+    text-center
+  "
+            >
+              <p className="text-xs uppercase tracking-widest text-red-500">
+                Elemento seleccionado
+              </p>
+
+              <p className="mt-1 font-bold text-red-700">
+                {deleteData?.nombre}
+              </p>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="
+          h-12
+          flex-1
+          rounded-2xl
+          border-violet-200
+          text-violet-700
+          hover:bg-violet-50
+        "
+                onClick={() => {
+                  setOpenDeleteDialog(false);
+                  setDeleteData(null);
+                }}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                variant="destructive"
+                className="
+          h-12
+          flex-1
+          rounded-2xl
+          bg-gradient-to-r
+          from-rose-500
+          to-red-500
+          text-white
+          shadow-[0_10px_30px_rgba(244,63,94,0.30)]
+          transition-all
+          hover:scale-[1.02]
+          hover:shadow-[0_15px_40px_rgba(244,63,94,0.40)]
+        "
+                onClick={async () => {
+                  if (!deleteData) return;
+
+                  setOpenDeleteDialog(false);
+
+                  if (deleteData.type === "producto") {
+                    await deleteProducto(deleteData.id);
+                  } else {
+                    await deleteCategoria(deleteData.id);
+                  }
+
+                  setDeleteData(null);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Sí, eliminar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
+      <Toaster richColors position="top-right" />
     </>
   );
 }
