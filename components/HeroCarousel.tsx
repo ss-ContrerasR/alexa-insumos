@@ -75,18 +75,15 @@ export default function HeroCarousel() {
   };
 
   return (
-    <section
-      id="inicio"
-      className="
-        relative
-        overflow-hidden
-        bg-gradient-to-br
-        from-[#fdf8ff]
-        via-[#f7f1ff]
-        to-[#efe7ff]
-        pt-28
-      "
-    >
+<section
+  id="inicio"
+  className="
+    relative
+    overflow-hidden
+    bg-[#f4eaff]  
+    pt-28
+  "
+>
       {/* BACKGROUND */}
 
       <div className="absolute inset-0 overflow-hidden">
@@ -95,8 +92,8 @@ export default function HeroCarousel() {
             absolute
             -top-32
             -left-20
-            h-[500px]
-            w-[500px]
+            h-125
+            w-125
             rounded-full
             bg-violet-200/40
             blur-[120px]
@@ -108,8 +105,8 @@ export default function HeroCarousel() {
             absolute
             top-0
             right-0
-            h-[450px]
-            w-[450px]
+            h-112.5
+            w-112.5
             rounded-full
             bg-fuchsia-200/40
             blur-[120px]
@@ -121,8 +118,8 @@ export default function HeroCarousel() {
             absolute
             bottom-0
             left-1/2
-            h-[350px]
-            w-[350px]
+            h-87.5
+            w-87.5
             -translate-x-1/2
             rounded-full
             bg-purple-200/40
@@ -170,7 +167,7 @@ export default function HeroCarousel() {
                 priority
                 className="
                   h-auto
-                  w-[240px]
+                  w-60
                   object-contain
 
                   md:w-[320px]
@@ -224,7 +221,7 @@ export default function HeroCarousel() {
             <span
               className="
                 block
-                bg-gradient-to-r
+                bg-linear-to-r
                 from-violet-600
                 via-fuchsia-500
                 to-purple-500
@@ -330,7 +327,7 @@ export default function HeroCarousel() {
                 className="
                   h-16
                   rounded-full
-                  bg-gradient-to-r
+                  bg-linear-to-r
                   from-violet-600
                   to-fuchsia-500
                   px-12
