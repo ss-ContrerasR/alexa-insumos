@@ -199,7 +199,7 @@ ${formatCurrency(total)}
 Muchas gracias.
 `);
 
-    window.open(`https://wa.me/573227680702?text=${message}`, "_blank");
+    window.open(`https://wa.me/573142651558?text=${message}`, "_blank");
   };
 
   const categories = useMemo(() => {
