@@ -132,7 +132,7 @@ export default function Footer() {
                 <div>
                   <div className="text-xs text-gray-500 mb-0.5">WhatsApp</div>
                   <a href="https://wa.me/573227680702" className="text-sm text-gray-300 hover:text-white transition-colors">
-                    +57 322 768 0702
+                    +57 3142651558
                   </a>
                 </div>
               </li>
