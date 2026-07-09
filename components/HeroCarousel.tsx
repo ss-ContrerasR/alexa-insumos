@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const API_PRODUCTOS =
-  "https://catalogoapiv-001-site1.qtempurl.com/api/productos";
+  "https://proyectosnet-001-site1.jtempurl.com/api/productos";
 
 interface Categoria {
   id: string;
